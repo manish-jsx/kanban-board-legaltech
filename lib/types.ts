@@ -49,3 +49,39 @@ export interface Board {
   title: string
   columns: KanbanColumn[]
 }
+
+export interface Project {
+  id: string
+  name: string
+  description: string
+  status: 'active' | 'completed' | 'archived'
+  teamMembers: User[]
+  createdAt: string
+  updatedAt: string
+  boardId?: string
+}
+
+export interface Meeting {
+  id: string
+  title: string
+  description: string
+  startTime: string
+  endTime: string
+  organizer: User
+  attendees: User[]
+  meetLink: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface KnowledgeArticle {
+  id: string
+  title: string
+  content: string
+  category: string
+  tags: string[]
+  author: User
+  createdAt: string
+  updatedAt: string
+  views: number
+}

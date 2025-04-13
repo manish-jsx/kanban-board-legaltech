@@ -1,4 +1,4 @@
-import type { Board, User } from "./types"
+import type { Board, User, Project, Meeting, KnowledgeArticle } from "./types"
 
 export const users: User[] = [
   {
@@ -203,3 +203,119 @@ export const initialBoardData: Board = {
     },
   ],
 }
+
+export const initialProjects: Project[] = [
+  {
+    id: "project-1",
+    name: "Website Redesign",
+    description: "Redesign the company website with improved UI/UX and mobile responsiveness",
+    status: "active",
+    teamMembers: [users[0], users[1], users[2]],
+    createdAt: "2023-11-15T08:00:00Z",
+    updatedAt: "2023-12-01T14:30:00Z",
+    boardId: "board-1",
+  },
+  {
+    id: "project-2",
+    name: "Client Portal Development",
+    description: "Build a secure client portal for document sharing and case updates",
+    status: "active",
+    teamMembers: [users[1], users[3], users[4]],
+    createdAt: "2023-11-20T09:15:00Z",
+    updatedAt: "2023-12-05T11:45:00Z",
+  },
+  {
+    id: "project-3",
+    name: "Mobile App Launch",
+    description: "Finalize and launch the mobile application for iOS and Android platforms",
+    status: "active",
+    teamMembers: [users[0], users[2], users[4]],
+    createdAt: "2023-11-25T10:30:00Z",
+    updatedAt: "2023-12-07T16:20:00Z",
+  }
+]
+
+export const initialMeetings: Meeting[] = [
+  {
+    id: "meeting-1",
+    title: "Weekly Team Standup",
+    description: "Review progress on active projects and discuss blockers",
+    startTime: "2023-12-18T09:00:00Z",
+    endTime: "2023-12-18T09:30:00Z",
+    organizer: users[0],
+    attendees: [users[0], users[1], users[2], users[3], users[4]],
+    meetLink: "https://meet.google.com/abc-defg-hij",
+    createdAt: "2023-12-10T14:30:00Z",
+    updatedAt: "2023-12-10T14:30:00Z",
+  },
+  {
+    id: "meeting-2",
+    title: "Website Redesign Planning",
+    description: "Discuss next steps for the website redesign project",
+    startTime: "2023-12-19T13:00:00Z",
+    endTime: "2023-12-19T14:00:00Z",
+    organizer: users[1],
+    attendees: [users[0], users[1], users[2]],
+    meetLink: "https://meet.google.com/jkl-mnop-qrs",
+    createdAt: "2023-12-12T10:15:00Z",
+    updatedAt: "2023-12-12T10:15:00Z",
+  },
+  {
+    id: "meeting-3",
+    title: "Client Portal Review",
+    description: "Review the client portal with stakeholders",
+    startTime: "2023-12-20T15:00:00Z",
+    endTime: "2023-12-20T16:00:00Z",
+    organizer: users[3],
+    attendees: [users[1], users[3], users[4]],
+    meetLink: "https://meet.google.com/tuv-wxyz-123",
+    createdAt: "2023-12-13T09:45:00Z",
+    updatedAt: "2023-12-13T09:45:00Z",
+  }
+]
+
+export const initialKnowledgeArticles: KnowledgeArticle[] = [
+  {
+    id: "article-1",
+    title: "Getting Started with Kanban Methodology",
+    content: "## Introduction to Kanban\n\nKanban is a visual system for managing work as it moves through a process...",
+    category: "Methodology",
+    tags: ["kanban", "agile", "productivity"],
+    author: users[0],
+    createdAt: "2023-11-10T10:00:00Z",
+    updatedAt: "2023-12-01T14:20:00Z",
+    views: 156,
+  },
+  {
+    id: "article-2",
+    title: "Best Practices for Legal Documentation",
+    content: "## Legal Documentation Best Practices\n\nWhen preparing legal documents, it's essential to follow these guidelines...",
+    category: "Documentation",
+    tags: ["legal", "documentation", "best-practices"],
+    author: users[3],
+    createdAt: "2023-11-15T08:30:00Z",
+    updatedAt: "2023-12-05T09:15:00Z",
+    views: 98,
+  },
+  {
+    id: "article-3",
+    title: "Using AI for Case Research",
+    content: "## AI-Powered Legal Research\n\nArtificial intelligence tools can significantly streamline the research process...",
+    category: "Technology",
+    tags: ["ai", "research", "legal-tech"],
+    author: users[4],
+    createdAt: "2023-11-20T11:45:00Z",
+    updatedAt: "2023-12-07T16:10:00Z",
+    views: 214,
+  }
+]
+
+export const knowledgeCategories = [
+  "Methodology",
+  "Documentation",
+  "Technology",
+  "Case Studies",
+  "Legal Resources",
+  "Tutorials",
+  "Best Practices",
+]

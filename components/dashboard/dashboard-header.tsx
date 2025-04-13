@@ -42,6 +42,15 @@ export function DashboardHeader() {
             <Link href="/" className={`flex items-center gap-2 ${pathname === "/" ? "text-[#2962FF]" : ""}`}>
               <span>Dashboard</span>
             </Link>
+            <Link href="/projects" className={`flex items-center gap-2 ${pathname.startsWith("/projects") ? "text-[#2962FF]" : ""}`}>
+              <span>Projects</span>
+            </Link>
+            <Link href="/meetings" className={`flex items-center gap-2 ${pathname.startsWith("/meetings") ? "text-[#2962FF]" : ""}`}>
+              <span>Meetings</span>
+            </Link>
+            <Link href="/knowledge" className={`flex items-center gap-2 ${pathname.startsWith("/knowledge") ? "text-[#2962FF]" : ""}`}>
+              <span>Knowledge Base</span>
+            </Link>
             <Link href="/users" className={`flex items-center gap-2 ${pathname === "/users" ? "text-[#2962FF]" : ""}`}>
               <span>Users</span>
             </Link>
@@ -60,6 +69,15 @@ export function DashboardHeader() {
       <nav className="hidden gap-6 md:flex">
         <Link href="/" className={`text-sm font-medium ${pathname === "/" ? "text-[#2962FF]" : ""}`}>
           Dashboard
+        </Link>
+        <Link href="/projects" className={`text-sm font-medium ${pathname.startsWith("/projects") ? "text-[#2962FF]" : ""}`}>
+          Projects
+        </Link>
+        <Link href="/meetings" className={`text-sm font-medium ${pathname.startsWith("/meetings") ? "text-[#2962FF]" : ""}`}>
+          Meetings
+        </Link>
+        <Link href="/knowledge" className={`text-sm font-medium ${pathname.startsWith("/knowledge") ? "text-[#2962FF]" : ""}`}>
+          Knowledge Base
         </Link>
         <Link href="/users" className={`text-sm font-medium ${pathname === "/users" ? "text-[#2962FF]" : ""}`}>
           Users
