@@ -15,6 +15,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Bell, Menu, Plus, Search } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { CreateTicketDialog } from "@/components/kanban/create-ticket-dialog"
+import { NotificationDropdown } from "@/components/notifications/notification-dropdown"
+import { GlobalSearch } from "@/components/dashboard/global-search"
 import { useState } from "react"
 
 export function DashboardHeader() {
@@ -30,7 +32,7 @@ export function DashboardHeader() {
             <span className="sr-only">Toggle navigation menu</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-[240px] sm:w-[300px]">
+        <SheetContent side="left" className="w-[240px] sm:w-[300px]" title="Navigation">
           <nav className="grid gap-6 text-lg font-medium">
             <Link
               href="/"
@@ -84,12 +86,25 @@ export function DashboardHeader() {
         </Link>
       </nav>
       <div className="ml-auto flex items-center gap-4">
-        <Button variant="outline" size="icon" className="text-muted-foreground" aria-label="Search">
-          <Search className="h-5 w-5" />
+        {/* Desktop search - hidden on mobile */}
+        <div className="hidden md:block md:max-w-[280px] lg:max-w-[320px]">
+          <GlobalSearch />
+        </div>
+        
+        {/* Mobile search button that opens a dialog */}
+        <Button 
+          variant="outline" 
+          size="icon" 
+          className="md:hidden" 
+          aria-label="Search"
+          onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
+        >
+          <Search className="h-5 w-5 text-muted-foreground" />
+          <span className="sr-only">Open search</span>
         </Button>
-        <Button variant="outline" size="icon" className="text-muted-foreground" aria-label="Notifications">
-          <Bell className="h-5 w-5" />
-        </Button>
+
+        <NotificationDropdown />
+
         <Button
           onClick={() => setIsCreateTicketOpen(true)}
           className="hidden bg-[#26A69A] hover:bg-[#26A69A]/90 md:flex"
@@ -97,20 +112,27 @@ export function DashboardHeader() {
           <Plus className="mr-2 h-4 w-4" />
           Create Ticket
         </Button>
+        
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-9 w-9 rounded-full" aria-label="User menu">
-              <Avatar className="h-9 w-9">
-                <AvatarImage src="/placeholder.svg?height=36&width=36" alt="Avatar" />
-                <AvatarFallback>JD</AvatarFallback>
-              </Avatar>
+              <Link href="/profile">
+                <Avatar className="h-9 w-9">
+                  <AvatarImage src="/placeholder.svg?height=36&width=36" alt="Avatar" />
+                  <AvatarFallback>JD</AvatarFallback>
+                </Avatar>
+              </Link>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/profile">Profile</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/settings">Settings</Link>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link href="/login">Log out</Link>
@@ -118,6 +140,7 @@ export function DashboardHeader() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
       <CreateTicketDialog open={isCreateTicketOpen} onOpenChange={setIsCreateTicketOpen} />
     </header>
   )
