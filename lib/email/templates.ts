@@ -1,0 +1,345 @@
+import { APP_URL } from './resend-client';
+
+// Shared email wrapper with premium design
+function emailWrapper(content: string, preheader?: string): string {
+    return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cengineers Kanban</title>
+  ${preheader ? `<span style="display:none;font-size:1px;color:#ffffff;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">${preheader}</span>` : ''}
+</head>
+<body style="margin:0;padding:0;background-color:#f0f2f5;font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0f2f5;padding:40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#2962FF 0%,#6366f1 100%);padding:32px 40px;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td>
+                    <div style="display:inline-block;width:40px;height:40px;background:rgba(255,255,255,0.2);border-radius:10px;text-align:center;line-height:40px;margin-right:12px;">
+                      <span style="color:#ffffff;font-size:18px;font-weight:bold;">CK</span>
+                    </div>
+                    <span style="color:#ffffff;font-size:22px;font-weight:700;vertical-align:middle;">Cengineers Kanban</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <!-- Content -->
+          <tr>
+            <td style="padding:40px;">
+              ${content}
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="padding:24px 40px;background-color:#f8fafc;border-top:1px solid #e2e8f0;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="color:#94a3b8;font-size:12px;line-height:1.6;">
+                    <p style="margin:0;">This email was sent by <strong style="color:#64748b;">Cengineers Kanban</strong>.</p>
+                    <p style="margin:4px 0 0 0;">
+                      <a href="${APP_URL}/settings" style="color:#2962FF;text-decoration:none;">Manage notification preferences</a> · 
+                      <a href="${APP_URL}" style="color:#2962FF;text-decoration:none;">Open Dashboard</a>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+        <p style="color:#94a3b8;font-size:11px;margin-top:16px;">© ${new Date().getFullYear()} Cengineers. All rights reserved.</p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+// Primary CTA button
+function ctaButton(label: string, url: string, color: string = '#2962FF'): string {
+    return `
+    <table cellpadding="0" cellspacing="0" style="margin:24px 0;">
+      <tr>
+        <td style="background-color:${color};border-radius:8px;padding:12px 28px;">
+          <a href="${url}" style="color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;display:inline-block;">${label}</a>
+        </td>
+      </tr>
+    </table>`;
+}
+
+// Priority badge
+function priorityBadge(priority: string): string {
+    const colors: Record<string, { bg: string; text: string }> = {
+        high: { bg: '#fef2f2', text: '#dc2626' },
+        medium: { bg: '#fff7ed', text: '#ea580c' },
+        low: { bg: '#f0fdf4', text: '#16a34a' },
+    };
+    const c = colors[priority.toLowerCase()] || colors.medium;
+    return `<span style="display:inline-block;padding:2px 10px;border-radius:12px;background:${c.bg};color:${c.text};font-size:12px;font-weight:600;text-transform:capitalize;">${priority}</span>`;
+}
+
+// ====== EMAIL TEMPLATES ======
+
+export function teamInviteEmail(data: {
+    inviteeName: string;
+    inviterName: string;
+    teamName: string;
+    role: string;
+}): { subject: string; html: string } {
+    return {
+        subject: `🎉 You've been invited to ${data.teamName} on Cengineers Kanban`,
+        html: emailWrapper(`
+      <h1 style="margin:0 0 8px;font-size:24px;font-weight:700;color:#1e293b;">You're Invited! 🎉</h1>
+      <p style="color:#64748b;font-size:16px;line-height:1.6;margin:0 0 24px;">
+        <strong style="color:#1e293b;">${data.inviterName}</strong> has invited you to join 
+        <strong style="color:#1e293b;">${data.teamName}</strong> as a <strong style="color:#2962FF;">${data.role}</strong>.
+      </p>
+      
+      <div style="background:#f8fafc;border-radius:12px;padding:20px;margin:0 0 24px;border:1px solid #e2e8f0;">
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="padding:8px 0;">
+              <span style="color:#94a3b8;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">Team</span><br>
+              <span style="color:#1e293b;font-size:14px;font-weight:500;">${data.teamName}</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;">
+              <span style="color:#94a3b8;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">Your Role</span><br>
+              <span style="color:#1e293b;font-size:14px;font-weight:500;">${data.role}</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;">
+              <span style="color:#94a3b8;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">Invited By</span><br>
+              <span style="color:#1e293b;font-size:14px;font-weight:500;">${data.inviterName}</span>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      ${ctaButton('Accept Invitation & Join Team', `${APP_URL}/register`, '#2962FF')}
+      
+      <p style="color:#94a3b8;font-size:13px;margin:0;">
+        If you didn't expect this invite, you can safely ignore this email.
+      </p>
+    `, `${data.inviterName} invited you to ${data.teamName}`)
+    };
+}
+
+export function ticketAssignedEmail(data: {
+    assigneeName: string;
+    assignerName: string;
+    ticketTitle: string;
+    ticketDescription: string;
+    priority: string;
+    dueDate: string;
+    projectName: string;
+    projectId: string;
+    ticketId: string;
+}): { subject: string; html: string } {
+    return {
+        subject: `📋 Ticket Assigned: ${data.ticketTitle}`,
+        html: emailWrapper(`
+      <h1 style="margin:0 0 8px;font-size:24px;font-weight:700;color:#1e293b;">New Ticket Assigned</h1>
+      <p style="color:#64748b;font-size:16px;line-height:1.6;margin:0 0 24px;">
+        <strong style="color:#1e293b;">${data.assignerName}</strong> assigned a ticket to you in 
+        <strong style="color:#2962FF;">${data.projectName}</strong>.
+      </p>
+      
+      <div style="background:#f8fafc;border-radius:12px;padding:24px;margin:0 0 24px;border-left:4px solid #2962FF;">
+        <h2 style="margin:0 0 8px;font-size:18px;font-weight:600;color:#1e293b;">${data.ticketTitle}</h2>
+        <p style="color:#64748b;font-size:14px;line-height:1.6;margin:0 0 16px;">${data.ticketDescription}</p>
+        <table cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="padding-right:16px;">
+              <span style="color:#94a3b8;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Priority</span><br>
+              ${priorityBadge(data.priority)}
+            </td>
+            <td>
+              <span style="color:#94a3b8;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Due Date</span><br>
+              <span style="color:#1e293b;font-size:13px;font-weight:500;">${data.dueDate}</span>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      ${ctaButton('View Ticket', `${APP_URL}/projects/${data.projectId}?ticket=${data.ticketId}`)}
+    `, `New ticket: ${data.ticketTitle}`)
+    };
+}
+
+export function meetingInviteEmail(data: {
+    attendeeName: string;
+    organizerName: string;
+    meetingTitle: string;
+    meetingDescription: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    meetLink: string;
+    attendees: string[];
+}): { subject: string; html: string } {
+    return {
+        subject: `📅 Meeting: ${data.meetingTitle} — ${data.date}`,
+        html: emailWrapper(`
+      <h1 style="margin:0 0 8px;font-size:24px;font-weight:700;color:#1e293b;">Meeting Invitation</h1>
+      <p style="color:#64748b;font-size:16px;line-height:1.6;margin:0 0 24px;">
+        <strong style="color:#1e293b;">${data.organizerName}</strong> invited you to a meeting.
+      </p>
+      
+      <div style="background:linear-gradient(135deg,#eff6ff 0%,#eef2ff 100%);border-radius:12px;padding:24px;margin:0 0 24px;border:1px solid #c7d2fe;">
+        <h2 style="margin:0 0 12px;font-size:20px;font-weight:600;color:#1e293b;">${data.meetingTitle}</h2>
+        ${data.meetingDescription ? `<p style="color:#64748b;font-size:14px;line-height:1.6;margin:0 0 20px;">${data.meetingDescription}</p>` : ''}
+        
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="padding:8px 0;">
+              <span style="color:#6366f1;font-size:16px;margin-right:8px;">📅</span>
+              <span style="color:#1e293b;font-size:14px;font-weight:500;">${data.date}</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;">
+              <span style="color:#6366f1;font-size:16px;margin-right:8px;">🕐</span>
+              <span style="color:#1e293b;font-size:14px;font-weight:500;">${data.startTime} — ${data.endTime}</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;">
+              <span style="color:#6366f1;font-size:16px;margin-right:8px;">👥</span>
+              <span style="color:#1e293b;font-size:14px;font-weight:500;">${data.attendees.join(', ')}</span>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      ${ctaButton('Join Meeting', data.meetLink, '#6366f1')}
+
+      <p style="color:#94a3b8;font-size:13px;margin:16px 0 0;">
+        <a href="${APP_URL}/meetings" style="color:#2962FF;text-decoration:none;">View in Calendar →</a>
+      </p>
+    `, `${data.meetingTitle} on ${data.date}`)
+    };
+}
+
+export function ticketStatusChangeEmail(data: {
+    recipientName: string;
+    changerName: string;
+    ticketTitle: string;
+    oldStatus: string;
+    newStatus: string;
+    projectName: string;
+    projectId: string;
+    ticketId: string;
+}): { subject: string; html: string } {
+    return {
+        subject: `🔄 Ticket Updated: ${data.ticketTitle} → ${data.newStatus}`,
+        html: emailWrapper(`
+      <h1 style="margin:0 0 8px;font-size:24px;font-weight:700;color:#1e293b;">Ticket Status Changed</h1>
+      <p style="color:#64748b;font-size:16px;line-height:1.6;margin:0 0 24px;">
+        <strong style="color:#1e293b;">${data.changerName}</strong> updated a ticket in 
+        <strong style="color:#2962FF;">${data.projectName}</strong>.
+      </p>
+      
+      <div style="background:#f8fafc;border-radius:12px;padding:24px;margin:0 0 24px;border:1px solid #e2e8f0;">
+        <h2 style="margin:0 0 16px;font-size:18px;font-weight:600;color:#1e293b;">${data.ticketTitle}</h2>
+        <table cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="padding:4px 12px;background:#fee2e2;color:#991b1b;border-radius:8px;font-size:13px;font-weight:500;">
+              ${data.oldStatus}
+            </td>
+            <td style="padding:0 12px;color:#94a3b8;font-size:18px;">→</td>
+            <td style="padding:4px 12px;background:#dcfce7;color:#166534;border-radius:8px;font-size:13px;font-weight:500;">
+              ${data.newStatus}
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      ${ctaButton('View Ticket', `${APP_URL}/projects/${data.projectId}?ticket=${data.ticketId}`)}
+    `, `${data.ticketTitle} moved to ${data.newStatus}`)
+    };
+}
+
+export function projectCreatedEmail(data: {
+    memberName: string;
+    creatorName: string;
+    projectName: string;
+    projectDescription: string;
+    projectId: string;
+}): { subject: string; html: string } {
+    return {
+        subject: `🚀 New Project: ${data.projectName}`,
+        html: emailWrapper(`
+      <h1 style="margin:0 0 8px;font-size:24px;font-weight:700;color:#1e293b;">New Project Created</h1>
+      <p style="color:#64748b;font-size:16px;line-height:1.6;margin:0 0 24px;">
+        <strong style="color:#1e293b;">${data.creatorName}</strong> added you to a new project.
+      </p>
+      
+      <div style="background:linear-gradient(135deg,#f0fdf4 0%,#ecfdf5 100%);border-radius:12px;padding:24px;margin:0 0 24px;border:1px solid #bbf7d0;">
+        <h2 style="margin:0 0 8px;font-size:20px;font-weight:600;color:#1e293b;">${data.projectName} 🚀</h2>
+        <p style="color:#64748b;font-size:14px;line-height:1.6;margin:0;">${data.projectDescription}</p>
+      </div>
+
+      ${ctaButton('Open Project', `${APP_URL}/projects/${data.projectId}`, '#16a34a')}
+    `, `You've been added to ${data.projectName}`)
+    };
+}
+
+export function weeklyDigestEmail(data: {
+    userName: string;
+    ticketsCompleted: number;
+    ticketsPending: number;
+    meetingsThisWeek: number;
+    teamUpdates: string[];
+}): { subject: string; html: string } {
+    return {
+        subject: `📊 Your Weekly Digest — Cengineers Kanban`,
+        html: emailWrapper(`
+      <h1 style="margin:0 0 8px;font-size:24px;font-weight:700;color:#1e293b;">Weekly Digest 📊</h1>
+      <p style="color:#64748b;font-size:16px;line-height:1.6;margin:0 0 24px;">
+        Hi <strong style="color:#1e293b;">${data.userName}</strong>, here's your weekly summary.
+      </p>
+      
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+        <tr>
+          <td style="width:33%;padding:8px;">
+            <div style="background:#eff6ff;border-radius:12px;padding:20px;text-align:center;">
+              <div style="font-size:28px;font-weight:700;color:#2962FF;">${data.ticketsCompleted}</div>
+              <div style="font-size:12px;color:#64748b;margin-top:4px;">Completed</div>
+            </div>
+          </td>
+          <td style="width:33%;padding:8px;">
+            <div style="background:#fff7ed;border-radius:12px;padding:20px;text-align:center;">
+              <div style="font-size:28px;font-weight:700;color:#ea580c;">${data.ticketsPending}</div>
+              <div style="font-size:12px;color:#64748b;margin-top:4px;">Pending</div>
+            </div>
+          </td>
+          <td style="width:33%;padding:8px;">
+            <div style="background:#eef2ff;border-radius:12px;padding:20px;text-align:center;">
+              <div style="font-size:28px;font-weight:700;color:#6366f1;">${data.meetingsThisWeek}</div>
+              <div style="font-size:12px;color:#64748b;margin-top:4px;">Meetings</div>
+            </div>
+          </td>
+        </tr>
+      </table>
+
+      ${data.teamUpdates.length > 0 ? `
+        <h3 style="margin:0 0 12px;font-size:16px;font-weight:600;color:#1e293b;">Team Updates</h3>
+        <ul style="margin:0 0 24px;padding-left:20px;">
+          ${data.teamUpdates.map(u => `<li style="color:#64748b;font-size:14px;line-height:2;">${u}</li>`).join('')}
+        </ul>
+      ` : ''}
+
+      ${ctaButton('View Dashboard', APP_URL)}
+    `, `${data.ticketsCompleted} tickets completed, ${data.ticketsPending} pending`)
+    };
+}

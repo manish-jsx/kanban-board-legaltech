@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
@@ -34,23 +35,31 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(true)
   const [error, setError] = useState("")
   const router = useRouter()
+  const { login, isAuthenticated } = useAuth()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/')
+    }
+  }, [isAuthenticated, router])
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError("")
 
-    // Simulate authentication delay
-    setTimeout(() => {
-      setIsLoading(false)
-
-      // Demo credentials check
-      if (email === "demo@example.com" && password === "password") {
+    try {
+      const result = await login(email, password)
+      if (result.success) {
         router.push("/")
       } else {
-        setError("Invalid email or password. Try demo@example.com / password")
+        setError(result.error || "Invalid email or password")
       }
-    }, 1500)
+    } catch (err: any) {
+      setError(err.message || "Login failed. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   // Animation variants
@@ -207,6 +216,21 @@ export default function LoginPage() {
                       </Alert>
                     )}
 
+                    {/* Demo credentials hint */}
+                    <div className="mb-4 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/50 p-3">
+                      <p className="text-xs font-semibold text-indigo-700 dark:text-indigo-300 mb-2">Demo Credentials</p>
+                      <div className="space-y-1 text-xs text-indigo-600 dark:text-indigo-400">
+                        <button type="button" className="block w-full text-left hover:bg-indigo-100 dark:hover:bg-indigo-900/50 rounded px-2 py-1 transition-colors" onClick={() => { setEmail('admin@cengineers.com'); setPassword('Admin@2026') }}>
+                          <span className="font-medium">Admin:</span> admin@cengineers.com / Admin@2026
+                        </button>
+                        <button type="button" className="block w-full text-left hover:bg-indigo-100 dark:hover:bg-indigo-900/50 rounded px-2 py-1 transition-colors" onClick={() => { setEmail('john.doe@cengineers.com'); setPassword('Manager@2026') }}>
+                          <span className="font-medium">Manager:</span> john.doe@cengineers.com / Manager@2026
+                        </button>
+                        <button type="button" className="block w-full text-left hover:bg-indigo-100 dark:hover:bg-indigo-900/50 rounded px-2 py-1 transition-colors" onClick={() => { setEmail('jane.smith@cengineers.com'); setPassword('Engineer@2026') }}>
+                          <span className="font-medium">Engineer:</span> jane.smith@cengineers.com / Engineer@2026
+                        </button>
+                      </div>
+                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="email">Email</Label>
                       <Input

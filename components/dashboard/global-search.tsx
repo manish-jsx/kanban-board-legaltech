@@ -55,58 +55,41 @@ export function GlobalSearch() {
     }
   }, [open, mobileOpen])
 
-  // Mock search function (in a real app, this would call an API)
+  // Real API search with debounce
   useEffect(() => {
     if (query.length > 1) {
       setIsLoading(true)
 
-      // Simulate API call with timeout
-      const timer = setTimeout(() => {
-        // Mock results based on query
-        const mockResults: SearchResult[] = [
-          {
-            id: "project-1",
-            title: "Website Redesign",
-            type: "project" as const,
-            url: "/projects/project-1",
-            icon: FileText
-          },
-          {
-            id: "ticket-5",
-            title: "Implement drag-and-drop functionality",
-            type: "ticket" as const,
-            url: "/projects/project-1?ticket=ticket-5",
-            icon: Ticket
-          },
-          {
-            id: "meeting-2",
-            title: "Website Redesign Planning",
-            type: "meeting" as const,
-            url: "/meetings",
-            icon: CalendarDays
-          },
-          {
-            id: "article-1",
-            title: "Getting Started with Kanban Methodology",
-            type: "article" as const,
-            url: "/knowledge/article-1",
-            icon: FileText
-          },
-          {
-            id: "user-2",
-            title: "Jane Smith",
-            type: "user" as const,
-            url: "/users",
-            icon: Users
-          }
-        ].filter(item =>
-          item.title.toLowerCase().includes(query.toLowerCase()) ||
-          item.type.includes(query.toLowerCase())
-        )
+      const timer = setTimeout(async () => {
+        try {
+          const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&limit=10`)
+          const data = await res.json()
 
-        setResults(mockResults)
-        setIsLoading(false)
-      }, 500)
+          const iconMap: Record<string, React.ElementType> = {
+            project: FileText,
+            ticket: Ticket,
+            meeting: CalendarDays,
+            article: FileText,
+            user: Users,
+          }
+
+          const mappedResults: SearchResult[] = (data.results || []).map((r: any) => ({
+            id: r.id,
+            title: r.title,
+            type: r.type,
+            url: r.url,
+            icon: iconMap[r.type] || FileText,
+            subtitle: r.subtitle,
+          }))
+
+          setResults(mappedResults)
+        } catch (error) {
+          console.error('Search error:', error)
+          setResults([])
+        } finally {
+          setIsLoading(false)
+        }
+      }, 300)
 
       return () => clearTimeout(timer)
     } else {

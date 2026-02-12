@@ -1,0 +1,281 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
+}
+
+// ─── Users & Auth ────────────────────────────────────────
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(ENGINEER)
+  status    UserStatus @default(ACTIVE)
+  avatar    String?
+  lastActive DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  assignedTickets   Ticket[]          @relation("TicketAssignee")
+  createdTickets    Ticket[]          @relation("TicketCreator")
+  comments          Comment[]
+  organizedMeetings Meeting[]         @relation("MeetingOrganizer")
+  attendingMeetings Meeting[]         @relation("MeetingAttendees")
+  articles          KnowledgeArticle[]
+  notifications     Notification[]
+  projectMemberships ProjectMember[]
+  activityLogs      ActivityLog[]
+
+  @@index([email])
+  @@index([role])
+  @@index([status])
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  ENGINEER
+  DESIGNER
+  RESEARCHER
+  VIEWER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+
+// ─── Projects ────────────────────────────────────────────
+
+model Project {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  status      ProjectStatus @default(ACTIVE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  board    Board?
+  members  ProjectMember[]
+  activities ActivityLog[]
+
+  @@index([status])
+}
+
+model ProjectMember {
+  id        String  @id @default(cuid())
+  projectId String
+  userId    String
+  role      String  @default("member")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@index([userId])
+}
+
+enum ProjectStatus {
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+// ─── Kanban Board ────────────────────────────────────────
+
+model Board {
+  id        String   @id @default(cuid())
+  title     String
+  projectId String   @unique
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  columns   Column[]
+}
+
+model Column {
+  id       String   @id @default(cuid())
+  title    String
+  position Int
+  wipLimit Int?
+  color    String?
+  boardId  String
+  board    Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  tickets  Ticket[]
+
+  @@index([boardId])
+  @@index([position])
+}
+
+model Ticket {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  type        TicketType @default(TASK)
+  priority    Priority   @default(MEDIUM)
+  dueDate     DateTime?
+  position    Int        @default(0)
+  timeSpent   Int?       @default(0)
+  columnId    String
+  assigneeId  String?
+  creatorId   String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  column      Column       @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  assignee    User?        @relation("TicketAssignee", fields: [assigneeId], references: [id])
+  creator     User?        @relation("TicketCreator", fields: [creatorId], references: [id])
+  comments    Comment[]
+  attachments Attachment[]
+  labels      TicketLabel[]
+
+  @@index([columnId])
+  @@index([assigneeId])
+  @@index([priority])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model Comment {
+  id       String   @id @default(cuid())
+  text     String
+  userId   String
+  ticketId String
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+}
+
+model Attachment {
+  id         String   @id @default(cuid())
+  name       String
+  url        String
+  type       String
+  size       Int
+  ticketId   String
+  uploadedAt DateTime @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+}
+
+model Label {
+  id      String        @id @default(cuid())
+  name    String        @unique
+  color   String
+  tickets TicketLabel[]
+}
+
+model TicketLabel {
+  ticketId String
+  labelId  String
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  label    Label  @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([ticketId, labelId])
+}
+
+enum TicketType {
+  FEATURE
+  BUG
+  TASK
+  RESEARCH
+  LEGAL_REVIEW
+  CLIENT_INTAKE
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+// ─── Meetings ────────────────────────────────────────────
+
+model Meeting {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  startTime   DateTime
+  endTime     DateTime
+  meetLink    String?
+  organizerId String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  organizer User   @relation("MeetingOrganizer", fields: [organizerId], references: [id])
+  attendees User[] @relation("MeetingAttendees")
+
+  @@index([organizerId])
+  @@index([startTime])
+}
+
+// ─── Knowledge Base ──────────────────────────────────────
+
+model KnowledgeArticle {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  category  String
+  tags      String[]
+  views     Int      @default(0)
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  author User @relation(fields: [authorId], references: [id])
+
+  @@index([category])
+  @@index([authorId])
+}
+
+// ─── Notifications ───────────────────────────────────────
+
+model Notification {
+  id        String    @id @default(cuid())
+  type      String
+  title     String
+  message   String
+  linkTo    String?
+  readAt    DateTime?
+  userId    String
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([readAt])
+  @@index([createdAt])
+}
+
+// ─── Activity Log ────────────────────────────────────────
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String
+  details   String?
+  userId    String
+  projectId String?
+  createdAt DateTime @default(now())
+
+  user    User     @relation(fields: [userId], references: [id])
+  project Project? @relation(fields: [projectId], references: [id])
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([createdAt])
+  @@index([entity, entityId])
+}

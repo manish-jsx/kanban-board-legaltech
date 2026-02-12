@@ -2,13 +2,25 @@ import type React from "react"
 import "@/app/globals.css"
 import { Inter } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
+import { AuthProvider } from "@/lib/auth-context"
+import { Toaster } from "sonner"
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+})
 
 export const metadata = {
-  title: "Cengineers Kanban",
-  description: "A Kanban board for Cengineers teams",
-    generator: 'v0.dev'
+  title: "Cengineers Kanban — Legal Team Management",
+  description:
+    "Streamline your legal team's workflow with powerful project management, knowledge sharing, and collaboration tools built for modern legal teams.",
+  keywords: "kanban, legal tech, project management, team collaboration, legal workflow",
+  openGraph: {
+    title: "Cengineers Kanban",
+    description: "Legal team project management & collaboration platform",
+    type: "website",
+  },
 }
 
 export default function RootLayout({
@@ -17,15 +29,30 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} bg-[#F4F5F7]`}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          {children}
+    <html lang="en" suppressHydrationWarning className={inter.variable}>
+      <body className={`${inter.className} bg-background antialiased`}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+          <Toaster
+            position="bottom-right"
+            richColors
+            closeButton
+            duration={4000}
+            toastOptions={{
+              style: {
+                borderRadius: "12px",
+              },
+            }}
+          />
         </ThemeProvider>
       </body>
     </html>
   )
 }
-
-
-import './globals.css'

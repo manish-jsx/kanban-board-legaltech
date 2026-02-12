@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -16,7 +15,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { User } from "@/lib/types"
-import { Loader2 } from "lucide-react"
+import { Loader2, Mail, CheckCircle2, AlertCircle } from "lucide-react"
+import { EmailService } from "@/lib/email/email-service"
+import { toast } from "sonner"
 
 interface InviteUserDialogProps {
   open: boolean
@@ -31,36 +32,64 @@ export function InviteUserDialog({ open, onOpenChange, onUserInvite }: InviteUse
   const [role, setRole] = useState("engineer")
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
-    // Create a new user
+    const fullName = `${firstName} ${lastName}`
+
+    // Create a new user object
     const newUser: User = {
       id: `user-${Date.now()}`,
-      name: `${firstName} ${lastName}`,
+      name: fullName,
       email,
       role,
-      status: "active",
+      status: "pending",
       lastActive: "Just now",
       avatar: `/placeholder.svg?height=40&width=40`,
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false)
-      if (onUserInvite) {
-        onUserInvite(newUser)
+    try {
+      // Send invitation email via Resend
+      const result = await EmailService.sendTeamInvite({
+        to: email,
+        inviteeName: fullName,
+        inviterName: "John Doe",
+        teamName: "Cengineers Legal Team",
+        role: role.charAt(0).toUpperCase() + role.slice(1),
+      })
+
+      if (result.success) {
+        toast.success("Invitation sent!", {
+          description: `An invite email has been sent to ${email}`,
+          icon: <CheckCircle2 className="h-4 w-4" />,
+        })
+      } else {
+        // Still add user locally even if email fails
+        toast.warning("User added (email not sent)", {
+          description: "The team member was added but the invite email could not be sent. Check your Resend API key.",
+          icon: <AlertCircle className="h-4 w-4" />,
+        })
       }
+    } catch (error) {
+      toast.warning("User added (email not sent)", {
+        description: "The team member was added but the invite email could not be delivered.",
+        icon: <AlertCircle className="h-4 w-4" />,
+      })
+    }
 
-      // Reset form
-      setFirstName("")
-      setLastName("")
-      setEmail("")
-      setRole("engineer")
+    // Add user to local state regardless
+    if (onUserInvite) {
+      onUserInvite(newUser)
+    }
 
-      onOpenChange(false)
-    }, 1000)
+    // Reset form
+    setFirstName("")
+    setLastName("")
+    setEmail("")
+    setRole("engineer")
+    setIsLoading(false)
+    onOpenChange(false)
   }
 
   return (
@@ -68,28 +97,48 @@ export function InviteUserDialog({ open, onOpenChange, onUserInvite }: InviteUse
       <DialogContent className="sm:max-w-[500px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Invite User</DialogTitle>
-            <DialogDescription>Invite a new user to join your team.</DialogDescription>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/30">
+                <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              </div>
+              Invite Team Member
+            </DialogTitle>
+            <DialogDescription>
+              Send an invitation email to add a new member to your team. They'll receive a
+              beautifully designed email with a link to join.
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName">First name</Label>
-                <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+                <Input
+                  id="firstName"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="Jane"
+                  required
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="lastName">Last name</Label>
-                <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+                <Input
+                  id="lastName"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Smith"
+                  required
+                />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Email address</Label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@example.com"
+                placeholder="jane@example.com"
                 required
               />
             </div>
@@ -100,6 +149,7 @@ export function InviteUserDialog({ open, onOpenChange, onUserInvite }: InviteUse
                   <SelectValue placeholder="Select role" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="manager">Manager</SelectItem>
                   <SelectItem value="engineer">Engineer</SelectItem>
                   <SelectItem value="designer">Designer</SelectItem>
@@ -112,14 +162,21 @@ export function InviteUserDialog({ open, onOpenChange, onUserInvite }: InviteUse
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" className="bg-[#2962FF] hover:bg-[#2962FF]/90" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md"
+              disabled={isLoading}
+            >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Sending Invite...
                 </>
               ) : (
-                "Send Invite"
+                <>
+                  <Mail className="mr-2 h-4 w-4" />
+                  Send Invitation
+                </>
               )}
             </Button>
           </DialogFooter>

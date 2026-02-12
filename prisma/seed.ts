@@ -1,0 +1,587 @@
+import { PrismaClient, Role, UserStatus, ProjectStatus, TicketType, Priority } from '@prisma/client'
+import bcrypt from 'bcryptjs'
+
+const prisma = new PrismaClient()
+
+async function main() {
+    console.log('🌱 Seeding database...\n')
+
+    // ─── Clean existing data ─────────────────────────────
+    await prisma.activityLog.deleteMany()
+    await prisma.notification.deleteMany()
+    await prisma.comment.deleteMany()
+    await prisma.attachment.deleteMany()
+    await prisma.ticketLabel.deleteMany()
+    await prisma.ticket.deleteMany()
+    await prisma.column.deleteMany()
+    await prisma.board.deleteMany()
+    await prisma.projectMember.deleteMany()
+    await prisma.meeting.deleteMany()
+    await prisma.knowledgeArticle.deleteMany()
+    await prisma.label.deleteMany()
+    await prisma.project.deleteMany()
+    await prisma.user.deleteMany()
+
+    // ─── Users (hardcoded credentials) ───────────────────
+    const hashedPasswords = {
+        admin: await bcrypt.hash('Admin@2026', 12),
+        manager: await bcrypt.hash('Manager@2026', 12),
+        engineer: await bcrypt.hash('Engineer@2026', 12),
+        designer: await bcrypt.hash('Designer@2026', 12),
+        researcher: await bcrypt.hash('Researcher@2026', 12),
+    }
+
+    const users = await Promise.all([
+        prisma.user.create({
+            data: {
+                name: 'Admin User',
+                email: 'admin@cengineers.com',
+                password: hashedPasswords.admin,
+                role: Role.ADMIN,
+                status: UserStatus.ACTIVE,
+                avatar: '/avatars/admin.png',
+            },
+        }),
+        prisma.user.create({
+            data: {
+                name: 'John Doe',
+                email: 'john.doe@cengineers.com',
+                password: hashedPasswords.manager,
+                role: Role.MANAGER,
+                status: UserStatus.ACTIVE,
+                avatar: '/avatars/john.png',
+            },
+        }),
+        prisma.user.create({
+            data: {
+                name: 'Jane Smith',
+                email: 'jane.smith@cengineers.com',
+                password: hashedPasswords.engineer,
+                role: Role.ENGINEER,
+                status: UserStatus.ACTIVE,
+                avatar: '/avatars/jane.png',
+            },
+        }),
+        prisma.user.create({
+            data: {
+                name: 'Alex Johnson',
+                email: 'alex.johnson@cengineers.com',
+                password: hashedPasswords.designer,
+                role: Role.DESIGNER,
+                status: UserStatus.ACTIVE,
+                avatar: '/avatars/alex.png',
+            },
+        }),
+        prisma.user.create({
+            data: {
+                name: 'Sarah Williams',
+                email: 'sarah.williams@cengineers.com',
+                password: hashedPasswords.researcher,
+                role: Role.RESEARCHER,
+                status: UserStatus.INACTIVE,
+                avatar: '/avatars/sarah.png',
+            },
+        }),
+        prisma.user.create({
+            data: {
+                name: 'Michael Brown',
+                email: 'michael.brown@cengineers.com',
+                password: hashedPasswords.engineer,
+                role: Role.ENGINEER,
+                status: UserStatus.ACTIVE,
+                avatar: '/avatars/michael.png',
+            },
+        }),
+    ])
+
+    console.log(`✅ Created ${users.length} users`)
+
+    // ─── Labels ──────────────────────────────────────────
+    const labels = await Promise.all([
+        prisma.label.create({ data: { name: 'frontend', color: '#3b82f6' } }),
+        prisma.label.create({ data: { name: 'backend', color: '#10b981' } }),
+        prisma.label.create({ data: { name: 'design', color: '#f59e0b' } }),
+        prisma.label.create({ data: { name: 'legal', color: '#8b5cf6' } }),
+        prisma.label.create({ data: { name: 'urgent', color: '#ef4444' } }),
+        prisma.label.create({ data: { name: 'documentation', color: '#6366f1' } }),
+        prisma.label.create({ data: { name: 'research', color: '#14b8a6' } }),
+    ])
+    console.log(`✅ Created ${labels.length} labels`)
+
+    // ─── Projects ────────────────────────────────────────
+    const project1 = await prisma.project.create({
+        data: {
+            name: 'Website Redesign',
+            description: 'Redesign the company website with improved UI/UX and mobile responsiveness',
+            status: ProjectStatus.ACTIVE,
+            members: {
+                create: [
+                    { userId: users[1].id, role: 'owner' },
+                    { userId: users[2].id, role: 'member' },
+                    { userId: users[3].id, role: 'member' },
+                    { userId: users[5].id, role: 'member' },
+                ],
+            },
+        },
+    })
+
+    const project2 = await prisma.project.create({
+        data: {
+            name: 'Client Portal Development',
+            description: 'Build a secure client-facing portal for case tracking and document sharing',
+            status: ProjectStatus.ACTIVE,
+            members: {
+                create: [
+                    { userId: users[1].id, role: 'owner' },
+                    { userId: users[2].id, role: 'member' },
+                    { userId: users[4].id, role: 'member' },
+                ],
+            },
+        },
+    })
+
+    const project3 = await prisma.project.create({
+        data: {
+            name: 'Mobile App Launch',
+            description: 'Finalize and launch the mobile application for iOS and Android platforms',
+            status: ProjectStatus.ACTIVE,
+            members: {
+                create: [
+                    { userId: users[1].id, role: 'owner' },
+                    { userId: users[3].id, role: 'member' },
+                    { userId: users[5].id, role: 'member' },
+                ],
+            },
+        },
+    })
+    console.log('✅ Created 3 projects')
+
+    // ─── Boards & Columns ───────────────────────────────
+    const board1 = await prisma.board.create({
+        data: {
+            title: 'Website Redesign Board',
+            projectId: project1.id,
+            columns: {
+                create: [
+                    { title: 'To Do', position: 0, color: '#6366f1' },
+                    { title: 'In Progress', position: 1, color: '#f59e0b' },
+                    { title: 'Review', position: 2, color: '#8b5cf6' },
+                    { title: 'Done', position: 3, color: '#10b981' },
+                ],
+            },
+        },
+        include: { columns: true },
+    })
+
+    const board2 = await prisma.board.create({
+        data: {
+            title: 'Client Portal Board',
+            projectId: project2.id,
+            columns: {
+                create: [
+                    { title: 'Backlog', position: 0, color: '#94a3b8' },
+                    { title: 'To Do', position: 1, color: '#6366f1' },
+                    { title: 'In Progress', position: 2, color: '#f59e0b' },
+                    { title: 'Done', position: 3, color: '#10b981' },
+                ],
+            },
+        },
+        include: { columns: true },
+    })
+
+    const board3 = await prisma.board.create({
+        data: {
+            title: 'Mobile App Board',
+            projectId: project3.id,
+            columns: {
+                create: [
+                    { title: 'To Do', position: 0, color: '#6366f1' },
+                    { title: 'In Progress', position: 1, color: '#f59e0b' },
+                    { title: 'QA Testing', position: 2, color: '#ec4899' },
+                    { title: 'Done', position: 3, color: '#10b981' },
+                ],
+            },
+        },
+        include: { columns: true },
+    })
+    console.log('✅ Created 3 boards with columns')
+
+    // ─── Tickets for Project 1 ──────────────────────────
+    const ticketsP1 = await Promise.all([
+        prisma.ticket.create({
+            data: {
+                title: 'Implement user authentication',
+                description: 'Set up user authentication using NextAuth.js with email/password and Google OAuth options.',
+                type: TicketType.FEATURE,
+                priority: Priority.HIGH,
+                dueDate: new Date('2026-03-15'),
+                position: 0,
+                columnId: board1.columns[0].id,
+                assigneeId: users[2].id,
+                creatorId: users[1].id,
+                labels: { create: [{ labelId: labels[1].id }] },
+            },
+        }),
+        prisma.ticket.create({
+            data: {
+                title: 'Design landing page mockups',
+                description: 'Create mockups for the new landing page focusing on conversion and user engagement.',
+                type: TicketType.TASK,
+                priority: Priority.MEDIUM,
+                dueDate: new Date('2026-03-10'),
+                position: 1,
+                columnId: board1.columns[0].id,
+                assigneeId: users[3].id,
+                creatorId: users[1].id,
+                labels: { create: [{ labelId: labels[2].id }] },
+            },
+        }),
+        prisma.ticket.create({
+            data: {
+                title: 'Research AI integration options',
+                description: 'Evaluate AI/ML frameworks for document analysis and intelligent search features.',
+                type: TicketType.RESEARCH,
+                priority: Priority.LOW,
+                dueDate: new Date('2026-03-20'),
+                position: 2,
+                columnId: board1.columns[0].id,
+                assigneeId: users[4].id,
+                creatorId: users[1].id,
+                labels: { create: [{ labelId: labels[6].id }] },
+            },
+        }),
+        prisma.ticket.create({
+            data: {
+                title: 'Fix responsive layout issues',
+                description: 'Address the layout issues on mobile devices, particularly on the dashboard and kanban board.',
+                type: TicketType.BUG,
+                priority: Priority.HIGH,
+                dueDate: new Date('2026-03-08'),
+                position: 0,
+                columnId: board1.columns[1].id,
+                assigneeId: users[5].id,
+                creatorId: users[1].id,
+                labels: { create: [{ labelId: labels[0].id }] },
+            },
+        }),
+        prisma.ticket.create({
+            data: {
+                title: 'Implement drag-and-drop functionality',
+                description: 'Add drag-and-drop functionality to the Kanban board using React DnD.',
+                type: TicketType.FEATURE,
+                priority: Priority.MEDIUM,
+                dueDate: new Date('2026-03-12'),
+                position: 1,
+                columnId: board1.columns[1].id,
+                assigneeId: users[2].id,
+                creatorId: users[1].id,
+                labels: { create: [{ labelId: labels[0].id }] },
+            },
+        }),
+        prisma.ticket.create({
+            data: {
+                title: 'Optimize database queries',
+                description: 'Review and optimize the current database queries to improve application performance.',
+                type: TicketType.TASK,
+                priority: Priority.MEDIUM,
+                dueDate: new Date('2026-03-09'),
+                position: 0,
+                columnId: board1.columns[2].id,
+                assigneeId: users[5].id,
+                creatorId: users[1].id,
+                labels: { create: [{ labelId: labels[1].id }] },
+                comments: {
+                    create: [{
+                        text: 'Found several N+1 query issues in the project list. Working on batch loading.',
+                        userId: users[5].id,
+                    }],
+                },
+            },
+        }),
+        prisma.ticket.create({
+            data: {
+                title: 'Set up CI/CD pipeline',
+                description: 'Configure GitHub Actions for continuous integration and deployment to Vercel.',
+                type: TicketType.TASK,
+                priority: Priority.HIGH,
+                dueDate: new Date('2026-02-28'),
+                position: 0,
+                columnId: board1.columns[3].id,
+                assigneeId: users[2].id,
+                creatorId: users[1].id,
+                labels: { create: [{ labelId: labels[1].id }] },
+            },
+        }),
+        prisma.ticket.create({
+            data: {
+                title: 'Create user onboarding flow',
+                description: 'Design and implement the user onboarding flow to improve new user experience.',
+                type: TicketType.FEATURE,
+                priority: Priority.MEDIUM,
+                dueDate: new Date('2026-03-03'),
+                position: 1,
+                columnId: board1.columns[3].id,
+                assigneeId: users[3].id,
+                creatorId: users[1].id,
+                labels: { create: [{ labelId: labels[2].id }] },
+            },
+        }),
+    ])
+
+    // ─── Tickets for Project 2 ──────────────────────────
+    const ticketsP2 = await Promise.all([
+        prisma.ticket.create({
+            data: {
+                title: 'Design client dashboard wireframes',
+                description: 'Create wireframes for the client-facing dashboard showing case progress.',
+                type: TicketType.TASK,
+                priority: Priority.HIGH,
+                dueDate: new Date('2026-03-05'),
+                position: 0,
+                columnId: board2.columns[1].id,
+                assigneeId: users[3].id,
+                creatorId: users[1].id,
+                labels: { create: [{ labelId: labels[2].id }, { labelId: labels[3].id }] },
+            },
+        }),
+        prisma.ticket.create({
+            data: {
+                title: 'Implement document upload & sharing',
+                description: 'Build secure file upload and sharing system for legal documents with access controls.',
+                type: TicketType.FEATURE,
+                priority: Priority.HIGH,
+                dueDate: new Date('2026-03-18'),
+                position: 0,
+                columnId: board2.columns[2].id,
+                assigneeId: users[2].id,
+                creatorId: users[1].id,
+                labels: { create: [{ labelId: labels[1].id }, { labelId: labels[3].id }] },
+            },
+        }),
+        prisma.ticket.create({
+            data: {
+                title: 'Set up client notification system',
+                description: 'Implement email and in-app notifications for case updates sent to clients.',
+                type: TicketType.FEATURE,
+                priority: Priority.MEDIUM,
+                dueDate: new Date('2026-03-22'),
+                position: 0,
+                columnId: board2.columns[0].id,
+                assigneeId: users[5].id,
+                creatorId: users[1].id,
+                labels: { create: [{ labelId: labels[1].id }] },
+            },
+        }),
+    ])
+
+    // ─── Tickets for Project 3 ──────────────────────────
+    await Promise.all([
+        prisma.ticket.create({
+            data: {
+                title: 'iOS app store submission',
+                description: 'Prepare and submit the iOS application to the Apple App Store.',
+                type: TicketType.TASK,
+                priority: Priority.URGENT,
+                dueDate: new Date('2026-03-01'),
+                position: 0,
+                columnId: board3.columns[0].id,
+                assigneeId: users[5].id,
+                creatorId: users[1].id,
+            },
+        }),
+        prisma.ticket.create({
+            data: {
+                title: 'Android push notifications',
+                description: 'Implement push notification system for the Android app using Firebase.',
+                type: TicketType.FEATURE,
+                priority: Priority.HIGH,
+                dueDate: new Date('2026-03-10'),
+                position: 0,
+                columnId: board3.columns[1].id,
+                assigneeId: users[5].id,
+                creatorId: users[1].id,
+            },
+        }),
+    ])
+
+    console.log(`✅ Created ${ticketsP1.length + ticketsP2.length + 2} tickets`)
+
+    // ─── Meetings ────────────────────────────────────────
+    const now = new Date()
+    await Promise.all([
+        prisma.meeting.create({
+            data: {
+                title: 'Weekly Team Standup',
+                description: 'Review progress on active projects and discuss blockers',
+                startTime: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 9, 0),
+                endTime: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 9, 30),
+                meetLink: 'https://meet.google.com/abc-defg-hij',
+                organizerId: users[1].id,
+                attendees: { connect: users.slice(1).map(u => ({ id: u.id })) },
+            },
+        }),
+        prisma.meeting.create({
+            data: {
+                title: 'Website Redesign Planning',
+                description: 'Discuss new design mockups and finalize the landing page approach',
+                startTime: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2, 14, 0),
+                endTime: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2, 15, 0),
+                meetLink: 'https://meet.google.com/klm-nopq-rst',
+                organizerId: users[3].id,
+                attendees: { connect: [{ id: users[1].id }, { id: users[2].id }, { id: users[3].id }] },
+            },
+        }),
+        prisma.meeting.create({
+            data: {
+                title: 'Client Portal Review',
+                description: 'Review client portal progress and demo current features',
+                startTime: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 3, 16, 0),
+                endTime: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 3, 17, 0),
+                meetLink: 'https://meet.google.com/uvw-xyz-123',
+                organizerId: users[1].id,
+                attendees: { connect: [{ id: users[2].id }, { id: users[4].id }, { id: users[5].id }] },
+            },
+        }),
+    ])
+    console.log('✅ Created 3 meetings')
+
+    // ─── Knowledge Articles ──────────────────────────────
+    await Promise.all([
+        prisma.knowledgeArticle.create({
+            data: {
+                title: 'Getting Started with Kanban Methodology',
+                content: `# Getting Started with Kanban\n\nKanban is a visual workflow management method that helps teams visualize work, limit work-in-progress, and maximize efficiency.\n\n## Key Principles\n\n1. **Visualize the workflow** — Use a board with columns representing each stage\n2. **Limit WIP** — Set limits on how many items can be in each stage\n3. **Manage flow** — Monitor and optimize the flow of work\n4. **Make policies explicit** — Define clear rules for each stage\n5. **Implement feedback loops** — Regular standups and reviews\n6. **Improve collaboratively** — Use data to drive continuous improvement\n\n## Benefits for Legal Teams\n\n- Track case progress visually\n- Identify bottlenecks in workflows\n- Improve team communication\n- Meet deadlines more consistently`,
+                category: 'Methodology',
+                tags: ['kanban', 'agile', 'workflow', 'legal-tech'],
+                views: 127,
+                authorId: users[1].id,
+            },
+        }),
+        prisma.knowledgeArticle.create({
+            data: {
+                title: 'Best Practices for Legal Document Management',
+                content: `# Legal Document Management\n\nEffective document management is critical for legal teams.\n\n## Document Naming Conventions\n\nUse the format: \`[ClientCode]-[CaseType]-[DocType]-[Version]\`\n\nExamples:\n- \`ACME-LIT-BRIEF-v2.1\`\n- \`JONES-CORP-NDA-v1.0\`\n\n## Version Control\n\n- Always create a new version, never overwrite\n- Lock documents during editing\n- Track all changes with audit trails\n\n## Security\n\n- Encrypt sensitive documents at rest\n- Use role-based access control\n- Implement watermarking for sensitive docs`,
+                category: 'Documentation',
+                tags: ['legal', 'document-management', 'best-practices'],
+                views: 89,
+                authorId: users[4].id,
+            },
+        }),
+        prisma.knowledgeArticle.create({
+            data: {
+                title: 'Using AI for Case Research',
+                content: `# AI-Powered Case Research\n\nAI tools can dramatically accelerate legal research.\n\n## Tools & Techniques\n\n- **Vector search** for finding similar precedents\n- **NLP** for contract analysis and clause extraction\n- **Summarization** for lengthy court opinions\n\n## Implementation\n\n1. Index your case database\n2. Train embeddings on your domain\n3. Build a retrieval pipeline\n4. Add human-in-the-loop review`,
+                category: 'Technology',
+                tags: ['ai', 'research', 'legal-tech'],
+                views: 214,
+                authorId: users[4].id,
+            },
+        }),
+        prisma.knowledgeArticle.create({
+            data: {
+                title: 'API Integration Guide for Cengineers Platform',
+                content: `# API Integration Guide\n\n## Authentication\n\nAll API calls require a Bearer token:\n\n\`\`\`\nAuthorization: Bearer <your-token>\n\`\`\`\n\n## Endpoints\n\n- \`GET /api/tickets\` — List tickets\n- \`POST /api/tickets\` — Create ticket\n- \`PATCH /api/tickets/:id\` — Update ticket\n\n## Rate Limits\n\n- 100 requests per minute per user\n- 1000 requests per hour per user`,
+                category: 'Technology',
+                tags: ['api', 'integration', 'developer'],
+                views: 56,
+                authorId: users[2].id,
+            },
+        }),
+    ])
+    console.log('✅ Created 4 knowledge articles')
+
+    // ─── Activity Logs ───────────────────────────────────
+    await Promise.all([
+        prisma.activityLog.create({
+            data: {
+                action: 'created',
+                entity: 'project',
+                entityId: project1.id,
+                details: 'Created project "Website Redesign"',
+                userId: users[1].id,
+                projectId: project1.id,
+            },
+        }),
+        prisma.activityLog.create({
+            data: {
+                action: 'assigned',
+                entity: 'ticket',
+                entityId: ticketsP1[0].id,
+                details: 'Assigned "Implement user authentication" to Jane Smith',
+                userId: users[1].id,
+                projectId: project1.id,
+            },
+        }),
+        prisma.activityLog.create({
+            data: {
+                action: 'completed',
+                entity: 'ticket',
+                entityId: ticketsP1[6].id,
+                details: 'Completed "Set up CI/CD pipeline"',
+                userId: users[2].id,
+                projectId: project1.id,
+            },
+        }),
+        prisma.activityLog.create({
+            data: {
+                action: 'scheduled',
+                entity: 'meeting',
+                entityId: 'meeting-1',
+                details: 'Scheduled "Weekly Team Standup"',
+                userId: users[1].id,
+            },
+        }),
+    ])
+    console.log('✅ Created activity logs')
+
+    // ─── Notifications ───────────────────────────────────
+    await Promise.all([
+        prisma.notification.create({
+            data: {
+                type: 'ticket_assigned',
+                title: 'Ticket Assigned',
+                message: 'You have been assigned "Implement user authentication"',
+                linkTo: `/projects/${project1.id}`,
+                userId: users[2].id,
+            },
+        }),
+        prisma.notification.create({
+            data: {
+                type: 'meeting_scheduled',
+                title: 'New Meeting',
+                message: 'John Doe scheduled "Weekly Team Standup"',
+                linkTo: '/meetings',
+                userId: users[2].id,
+            },
+        }),
+        prisma.notification.create({
+            data: {
+                type: 'project_created',
+                title: 'New Project',
+                message: 'You\'ve been added to "Client Portal Development"',
+                linkTo: `/projects/${project2.id}`,
+                userId: users[4].id,
+            },
+        }),
+    ])
+    console.log('✅ Created notifications')
+
+    console.log('\n🎉 Database seeded successfully!')
+    console.log('\n📋 Employee Credentials:')
+    console.log('─────────────────────────────────────────')
+    console.log('Admin:      admin@cengineers.com       / Admin@2026')
+    console.log('Manager:    john.doe@cengineers.com     / Manager@2026')
+    console.log('Engineer:   jane.smith@cengineers.com   / Engineer@2026')
+    console.log('Designer:   alex.johnson@cengineers.com / Designer@2026')
+    console.log('Researcher: sarah.williams@cengineers.com / Researcher@2026')
+    console.log('Engineer:   michael.brown@cengineers.com / Engineer@2026')
+}
+
+main()
+    .catch((e) => {
+        console.error('❌ Seed error:', e)
+        process.exit(1)
+    })
+    .finally(async () => {
+        await prisma.$disconnect()
+    })

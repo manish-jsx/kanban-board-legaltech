@@ -12,136 +12,220 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Bell, Menu, Plus, Search } from "lucide-react"
+import {
+  Bell, Menu, Plus, Search, LayoutDashboard,
+  FolderKanban, CalendarDays, BookOpen, Users,
+  Settings, Moon, Sun, LogOut, User
+} from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { CreateTicketDialog } from "@/components/kanban/create-ticket-dialog"
 import { NotificationDropdown } from "@/components/notifications/notification-dropdown"
 import { GlobalSearch } from "@/components/dashboard/global-search"
 import { useState } from "react"
+import { useTheme } from "next-themes"
+import { motion } from "framer-motion"
+
+const navLinks = [
+  { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/projects", label: "Projects", icon: FolderKanban },
+  { href: "/meetings", label: "Meetings", icon: CalendarDays },
+  { href: "/knowledge", label: "Knowledge", icon: BookOpen },
+  { href: "/users", label: "Team", icon: Users },
+]
 
 export function DashboardHeader() {
   const pathname = usePathname()
   const [isCreateTicketOpen, setIsCreateTicketOpen] = useState(false)
+  const { theme, setTheme } = useTheme()
+
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/"
+    return pathname.startsWith(href)
+  }
 
   return (
-    <header className="sticky top-0 z-50 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
+    <motion.header
+      initial={{ y: -8, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      className="sticky top-0 z-50 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-xl px-4 md:px-6"
+    >
+      {/* Mobile nav */}
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="outline" size="icon" className="md:hidden">
+          <Button variant="ghost" size="icon" className="md:hidden">
             <Menu className="h-5 w-5" />
             <span className="sr-only">Toggle navigation menu</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-[240px] sm:w-[300px]" title="Navigation">
-          <nav className="grid gap-6 text-lg font-medium">
-            <Link
-              href="/"
-              className={`flex items-center gap-2 text-lg font-semibold ${pathname === "/" ? "text-[#2962FF]" : ""}`}
-            >
-              <div className="h-8 w-8 rounded-full bg-[#2962FF]"></div>
-              <span>Cengineers Kanban</span>
-            </Link>
-            <Link href="/" className={`flex items-center gap-2 ${pathname === "/" ? "text-[#2962FF]" : ""}`}>
-              <span>Dashboard</span>
-            </Link>
-            <Link href="/projects" className={`flex items-center gap-2 ${pathname.startsWith("/projects") ? "text-[#2962FF]" : ""}`}>
-              <span>Projects</span>
-            </Link>
-            <Link href="/meetings" className={`flex items-center gap-2 ${pathname.startsWith("/meetings") ? "text-[#2962FF]" : ""}`}>
-              <span>Meetings</span>
-            </Link>
-            <Link href="/knowledge" className={`flex items-center gap-2 ${pathname.startsWith("/knowledge") ? "text-[#2962FF]" : ""}`}>
-              <span>Knowledge Base</span>
-            </Link>
-            <Link href="/users" className={`flex items-center gap-2 ${pathname === "/users" ? "text-[#2962FF]" : ""}`}>
-              <span>Users</span>
-            </Link>
-          </nav>
+        <SheetContent side="left" className="w-[280px] p-0" title="Navigation">
+          <div className="flex flex-col h-full">
+            {/* Mobile nav header */}
+            <div className="p-5 border-b">
+              <Link href="/" className="flex items-center gap-2.5">
+                <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-md">
+                  <span className="text-sm font-bold text-white">CK</span>
+                </div>
+                <span className="font-bold text-lg gradient-text">Cengineers Kanban</span>
+              </Link>
+            </div>
+            {/* Mobile nav links */}
+            <nav className="flex-1 p-3 space-y-1">
+              {navLinks.map((link) => {
+                const Icon = link.icon
+                const active = isActive(link.href)
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${active
+                        ? "bg-primary/10 text-primary shadow-sm"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      }`}
+                  >
+                    <Icon className={`h-4.5 w-4.5 ${active ? "text-primary" : ""}`} />
+                    {link.label}
+                    {active && (
+                      <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
+                    )}
+                  </Link>
+                )
+              })}
+            </nav>
+            {/* Mobile nav footer */}
+            <div className="p-4 border-t">
+              <Link
+                href="/settings"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted"
+              >
+                <Settings className="h-4.5 w-4.5" />
+                Settings
+              </Link>
+            </div>
+          </div>
         </SheetContent>
       </Sheet>
-      <div className="flex items-center gap-2">
-        <Link href="/" className="flex items-center gap-2 text-lg font-semibold md:hidden">
-          <div className="h-8 w-8 rounded-full bg-[#2962FF]"></div>
-        </Link>
-        <Link href="/" className="hidden items-center gap-2 text-lg font-semibold md:flex">
-          <div className="h-8 w-8 rounded-full bg-[#2962FF]"></div>
-          <span>Cengineers Kanban</span>
-        </Link>
-      </div>
-      <nav className="hidden gap-6 md:flex">
-        <Link href="/" className={`text-sm font-medium ${pathname === "/" ? "text-[#2962FF]" : ""}`}>
-          Dashboard
-        </Link>
-        <Link href="/projects" className={`text-sm font-medium ${pathname.startsWith("/projects") ? "text-[#2962FF]" : ""}`}>
-          Projects
-        </Link>
-        <Link href="/meetings" className={`text-sm font-medium ${pathname.startsWith("/meetings") ? "text-[#2962FF]" : ""}`}>
-          Meetings
-        </Link>
-        <Link href="/knowledge" className={`text-sm font-medium ${pathname.startsWith("/knowledge") ? "text-[#2962FF]" : ""}`}>
-          Knowledge Base
-        </Link>
-        <Link href="/users" className={`text-sm font-medium ${pathname === "/users" ? "text-[#2962FF]" : ""}`}>
-          Users
-        </Link>
+
+      {/* Logo */}
+      <Link href="/" className="flex items-center gap-2.5 shrink-0">
+        <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-sm">
+          <span className="text-xs font-bold text-white">CK</span>
+        </div>
+        <span className="hidden lg:block font-bold text-base">
+          <span className="gradient-text">Cengineers</span>
+        </span>
+      </Link>
+
+      {/* Desktop nav */}
+      <nav className="hidden md:flex items-center gap-1 ml-4">
+        {navLinks.map((link) => {
+          const Icon = link.icon
+          const active = isActive(link.href)
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${active
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                }`}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              {link.label}
+              {active && (
+                <motion.div
+                  layoutId="activeNav"
+                  className="absolute inset-0 bg-primary/8 rounded-lg border border-primary/20"
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                />
+              )}
+            </Link>
+          )
+        })}
       </nav>
-      <div className="ml-auto flex items-center gap-4">
-        {/* Desktop search - hidden on mobile */}
-        <div className="hidden md:block md:max-w-[280px] lg:max-w-[320px]">
+
+      {/* Right section */}
+      <div className="ml-auto flex items-center gap-2">
+        {/* Desktop search */}
+        <div className="hidden md:block md:max-w-[260px] lg:max-w-[300px]">
           <GlobalSearch />
         </div>
-        
-        {/* Mobile search button that opens a dialog */}
-        <Button 
-          variant="outline" 
-          size="icon" 
-          className="md:hidden" 
+
+        {/* Mobile search */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden h-9 w-9"
           aria-label="Search"
           onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
         >
-          <Search className="h-5 w-5 text-muted-foreground" />
-          <span className="sr-only">Open search</span>
+          <Search className="h-4.5 w-4.5 text-muted-foreground" />
+        </Button>
+
+        {/* Theme toggle */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9"
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          aria-label="Toggle theme"
+        >
+          <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+          <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
         </Button>
 
         <NotificationDropdown />
 
         <Button
           onClick={() => setIsCreateTicketOpen(true)}
-          className="hidden bg-[#26A69A] hover:bg-[#26A69A]/90 md:flex"
+          className="hidden md:flex bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md shadow-blue-500/20 h-9 px-4 text-sm"
         >
-          <Plus className="mr-2 h-4 w-4" />
-          Create Ticket
+          <Plus className="mr-1.5 h-4 w-4" />
+          New Ticket
         </Button>
-        
+
+        {/* User menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-9 w-9 rounded-full" aria-label="User menu">
-              <Link href="/profile">
-                <Avatar className="h-9 w-9">
-                  <AvatarImage src="/placeholder.svg?height=36&width=36" alt="Avatar" />
-                  <AvatarFallback>JD</AvatarFallback>
-                </Avatar>
-              </Link>
+            <Button variant="ghost" className="relative h-9 w-9 rounded-full ring-2 ring-transparent hover:ring-primary/20 transition-all" aria-label="User menu">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src="/placeholder.svg?height=36&width=36" alt="John Doe" />
+                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-500 text-white text-xs font-bold">JD</AvatarFallback>
+              </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-semibold">John Doe</p>
+                <p className="text-xs text-muted-foreground">john.doe@cengineers.com</p>
+              </div>
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href="/profile">Profile</Link>
+              <Link href="/profile" className="cursor-pointer">
+                <User className="mr-2 h-4 w-4" />
+                Profile
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/settings">Settings</Link>
+              <Link href="/settings" className="cursor-pointer">
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href="/login">Log out</Link>
+              <Link href="/login" className="cursor-pointer text-destructive focus:text-destructive">
+                <LogOut className="mr-2 h-4 w-4" />
+                Log out
+              </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
       <CreateTicketDialog open={isCreateTicketOpen} onOpenChange={setIsCreateTicketOpen} />
-    </header>
+    </motion.header>
   )
 }
